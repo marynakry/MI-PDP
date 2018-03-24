@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <omp.h >
+#include <omp.h>
 using namespace std;
 
 struct Point {
