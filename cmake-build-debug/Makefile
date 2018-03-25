@@ -111,17 +111,17 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named try
+# Target rules for targets named HW2
 
 # Build rule for target.
-try: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 try
-.PHONY : try
+HW2: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 HW2
+.PHONY : HW2
 
 # fast build rule for target.
-try/fast:
-	$(MAKE) -f CMakeFiles/try.dir/build.make CMakeFiles/try.dir/build
-.PHONY : try/fast
+HW2/fast:
+	$(MAKE) -f CMakeFiles/HW2.dir/build.make CMakeFiles/HW2.dir/build
+.PHONY : HW2/fast
 
 main.o: main.cpp.o
 
@@ -129,7 +129,7 @@ main.o: main.cpp.o
 
 # target to build an object file
 main.cpp.o:
-	$(MAKE) -f CMakeFiles/try.dir/build.make CMakeFiles/try.dir/main.cpp.o
+	$(MAKE) -f CMakeFiles/HW2.dir/build.make CMakeFiles/HW2.dir/main.cpp.o
 .PHONY : main.cpp.o
 
 main.i: main.cpp.i
@@ -138,7 +138,7 @@ main.i: main.cpp.i
 
 # target to preprocess a source file
 main.cpp.i:
-	$(MAKE) -f CMakeFiles/try.dir/build.make CMakeFiles/try.dir/main.cpp.i
+	$(MAKE) -f CMakeFiles/HW2.dir/build.make CMakeFiles/HW2.dir/main.cpp.i
 .PHONY : main.cpp.i
 
 main.s: main.cpp.s
@@ -147,7 +147,7 @@ main.s: main.cpp.s
 
 # target to generate assembly for a file
 main.cpp.s:
-	$(MAKE) -f CMakeFiles/try.dir/build.make CMakeFiles/try.dir/main.cpp.s
+	$(MAKE) -f CMakeFiles/HW2.dir/build.make CMakeFiles/HW2.dir/main.cpp.s
 .PHONY : main.cpp.s
 
 # Help Target
@@ -158,7 +158,7 @@ help:
 	@echo "... depend"
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
-	@echo "... try"
+	@echo "... HW2"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

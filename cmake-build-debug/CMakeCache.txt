@@ -135,7 +135,7 @@ CMAKE_OSX_DEPLOYMENT_TARGET:STRING=
 CMAKE_OSX_SYSROOT:STRING=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=try
+CMAKE_PROJECT_NAME:STATIC=HW2
 
 //Path to a program.
 CMAKE_RANLIB:FILEPATH=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib
@@ -194,12 +194,6 @@ HW2_SOURCE_DIR:STATIC=/Users/marinarii/Documents/GitHub/MI-PDP
 
 //Path to a program.
 ProcessorCount_cmd_sysctl:FILEPATH=/usr/sbin/sysctl
-
-//Value Computed by CMake
-try_BINARY_DIR:STATIC=/Users/marinarii/Documents/GitHub/MI-PDP/cmake-build-debug
-
-//Value Computed by CMake
-try_SOURCE_DIR:STATIC=/Users/marinarii/Documents/GitHub/MI-PDP
 
 
 ########################
