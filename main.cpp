@@ -333,13 +333,13 @@ int main(int argc, char* argv[]){
   cout << "Threads " << thread_count << endl;
   omp_set_num_threads(thread_count);
   
-  auto start = high_resolution_clock::now();
+  auto start = std::chrono::high_resolution_clock::now();
 
 
   cout << findQueenMoves(argv[2]) << endl;
 
-auto stop = high_resolution_clock::now();
+auto stop = std::chrono::high_resolution_clock::now();
 
-  cout << "Time " << duration_cast<microseconds>(stop-start).count()/1000. << '\n';
-    return 0;
+  cout << "Time " << std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count()/1000. << '\n';
+     return 0;
 }
