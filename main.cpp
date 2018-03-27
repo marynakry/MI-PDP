@@ -63,6 +63,10 @@ int **parseFile(int &boundary, int &size, const char * filename){
 
     string s;
     ifstream file(filename);
+    if (!file) {
+      cerr << "Can't open " << filename << endl;
+      exit(1);
+    }
     file >> size;
     file.ignore(1, '\n');
     file >> boundary;
@@ -205,7 +209,7 @@ void checkBoard(int **board, vector<Point> path){
 void goDeeper(int **board, int size, int *queen, int boundary, int enemyCount, bool **visited) { //recursion function
 
     if (!enemyCount && path.size() < bestSteps) {  //if found a better solution
-    
+
         #pragma omp critical
         {
             if (path.size() < bestSteps) {
@@ -319,13 +323,17 @@ int findQueenMoves (const char * filename) {
     return result;
 }
 
-int main(){
+int main(int argc, char* argv[]){
+  if (argc != 2) {
+    cout << "Usage: " << argv[0] << " <test_file>" << endl;
+    return 1;
+  }
   long startTime, endTime;
   startTime = clock();
 
-    cout << findQueenMoves("/Users/marinarii/Studium/PDP/untitled/data/kralovna01.txt") << endl;
+  cout << findQueenMoves(argv[1]) << endl;
 
-    endTime = clock();
+  endTime = clock();
 
   cout << "Time " << (endTime - startTime) << '\n';
     return 0;
