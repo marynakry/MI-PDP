@@ -324,17 +324,22 @@ int findQueenMoves (const char * filename) {
 }
 
 int main(int argc, char* argv[]){
-  if (argc != 2) {
-    cout << "Usage: " << argv[0] << " <test_file>" << endl;
+    if (argc != 3) {
+    cout << "Usage: " << argv[0] << " <thread_count> <test_file>" << endl;
     return 1;
   }
-  long startTime, endTime;
-  startTime = clock();
 
-  cout << findQueenMoves(argv[1]) << endl;
+  thread_count = atoi(argv[1]);
+  cout << "Threads " << thread_count << endl;
+  omp_set_num_threads(thread_count);
+  
+  auto start = high_resolution_clock::now();
 
-  endTime = clock();
 
-  cout << "Time " << (endTime - startTime) << '\n';
+  cout << findQueenMoves(argv[2]) << endl;
+
+auto stop = high_resolution_clock::now();
+
+  cout << "Time " << duration_cast<microseconds>(stop-start).count()/1000. << '\n';
     return 0;
 }
