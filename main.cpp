@@ -329,7 +329,7 @@ int main(int argc, char* argv[]){
     return 1;
   }
 
-  thread_count = atoi(argv[1]);
+  int thread_count = atoi(argv[1]);
   cout << "Threads " << thread_count << endl;
   omp_set_num_threads(thread_count);
   
