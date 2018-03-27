@@ -1,7 +1,10 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <omp.h >
+#include <omp.h>
+#include <unistd.h>
+#include <time.h>
+
 using namespace std;
 
 struct Point {
@@ -10,7 +13,7 @@ struct Point {
     int y;
 };
 
-int bestSteps = INT_MAX;
+int bestSteps = 1000;
 vector<Point> bestPath;
 vector<Point> path;
 
@@ -202,9 +205,15 @@ void checkBoard(int **board, vector<Point> path){
 void goDeeper(int **board, int size, int *queen, int boundary, int enemyCount, bool **visited) { //recursion function
 
     if (!enemyCount && path.size() < bestSteps) {  //if found a better solution
-        bestSteps = path.size();
-        bestPath = path;
-        return;
+    
+        #pragma omp critical
+        {
+            if (path.size() < bestSteps) {
+                bestSteps = path.size();
+                bestPath = path;
+              //  return;
+            }
+        }
     }
 
     int stepsCount = 0;
@@ -213,40 +222,51 @@ void goDeeper(int **board, int size, int *queen, int boundary, int enemyCount, b
 
     while (chosenNode < stepsCount) {
 
-        if (path.size() + enemyCount < bestSteps && boundary > 0) { // check
-            path.push_back(Point(steps[chosenNode][0], steps[chosenNode][1])); // add to path
-            visited[steps[chosenNode][0]][steps[chosenNode][1]] = true; // make visited
+          if (path.size() + enemyCount < bestSteps && boundary > 0) { // check
+              path.push_back(Point(steps[chosenNode][0], steps[chosenNode][1])); // add to path
+              visited[steps[chosenNode][0]][steps[chosenNode][1]] = true; // make visited
 
-            int *newQueen = new int[2]; // move queen
-            newQueen[0] = steps[chosenNode][0];
-            newQueen[1] = steps[chosenNode][1];
-            int newEnemyCount = enemyCount;
+              int *newQueen = new int[2]; // move queen
+              newQueen[0] = steps[chosenNode][0];
+              newQueen[1] = steps[chosenNode][1];
+              int newEnemyCount = enemyCount;
 
-            // make new board
-            int **newBoard = new int *[size];
-            for (int i = 0; i < size; i++) {
-                newBoard[i] = new int [size]();
-            }
+              // make new board
+              int **newBoard = new int *[size];
+              for (int i = 0; i < size; i++) {
+                  newBoard[i] = new int [size]();
+              }
 
-            for (int i = 0; i < size; ++i) {
-                for (int j = 0; j < size; ++j) {
-                    newBoard[i][j] = board[i][j];
+              for (int i = 0; i < size; ++i) {
+                  for (int j = 0; j < size; ++j) {
+                      newBoard[i][j] = board[i][j];
+                  }
+              }
+
+              if (board[newQueen[0]][newQueen[1]] == 1) { // check if has black piece
+                  newBoard[newQueen[0]][newQueen[1]] = 0;
+                  newEnemyCount--;
+              }
+
+              bool isTask =  (path.size() + newEnemyCount < bestSteps && (boundary-1) > 0);
+              if(isTask){
+                #pragma omp task if(bestSteps < (boundary+bestSteps)/2) shared(chosenNode, bestPath, bestSteps) firstprivate(path, newEnemyCount, boundary, newBoard, newQueen, visited)
+                {
+                  goDeeper(newBoard, size, newQueen, boundary - 1, newEnemyCount, visited); // recursion
                 }
-            }
 
-            if (board[newQueen[0]][newQueen[1]] == 1) { // check if has black piece
-                newBoard[newQueen[0]][newQueen[1]] = 0;
-                newEnemyCount--;
-            }
+                #pragma omp taskwait
+  }
 
-            goDeeper(newBoard, size, newQueen, boundary - 1, newEnemyCount, visited); // recursion
+              delete[] newQueen;
+              deleteArr(newBoard, size);
+              path.pop_back(); // delete from path
+              visited[steps[chosenNode][0]][steps[chosenNode][1]] = false;
+          }
+          chosenNode++;
 
-            delete[] newQueen;
-            deleteArr(newBoard, size);
-            path.pop_back(); // delete from path
-            visited[steps[chosenNode][0]][steps[chosenNode][1]] = false;
-        }
-        chosenNode++;
+
+
     }
 
     for (int i = 0; i < stepsCount; i++) {
@@ -256,6 +276,7 @@ void goDeeper(int **board, int size, int *queen, int boundary, int enemyCount, b
     return;
 }
 
+
 int solve(int **board, int size, int *queen, int boundary, int enemyCount) {
     // make visited array
     bool ** visited = new bool* [size];
@@ -264,7 +285,13 @@ int solve(int **board, int size, int *queen, int boundary, int enemyCount) {
     }
     visited[queen[0]][queen[1]] = true;
 
-    goDeeper(board, size, queen, boundary, enemyCount, visited); // start recursion
+    #pragma omp parallel shared(bestPath, bestSteps) firstprivate(board, size, queen, boundary, enemyCount, visited)
+    {
+        #pragma omp single
+        {
+          goDeeper(board, size, queen, boundary, enemyCount, visited); // start recursion
+        }
+    }
 
     for (int i = 0; i < size; i++) {
         delete [] visited[i];
@@ -278,7 +305,7 @@ int findQueenMoves (const char * filename) {
     //clear global
     bestPath.clear();
     path.clear();
-    bestSteps = INT_MAX;
+    bestSteps = 1000;
     int **board;
     int boundary, size;
     int queen[2]; // queen coordinates
@@ -293,8 +320,13 @@ int findQueenMoves (const char * filename) {
 }
 
 int main(){
+  long startTime, endTime;
+  startTime = clock();
 
-    cout << findQueenMoves("/Users/marinarii/Studium/PDP/untitled/data/kralovna04.txt") << endl;
+    cout << findQueenMoves("/Users/marinarii/Studium/PDP/untitled/data/kralovna01.txt") << endl;
 
+    endTime = clock();
+
+  cout << "Time " << (endTime - startTime) << '\n';
     return 0;
 }
