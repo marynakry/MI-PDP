@@ -256,42 +256,31 @@ void goDeeper(int **board, int size, int *queen, int boundary, int enemyCount, b
               int newEnemyCount = enemyCount;
 
               // make new board
-              //newBoard = copyArr(board, size);
+          int**    newBoard = copyArr(board, size);
 
-            /*  if (board[newQueen[0]][newQueen[1]] == 1) { // check if has black piece
+              if (board[newQueen[0]][newQueen[1]] == 1) { // check if has black piece
                   newBoard[newQueen[0]][newQueen[1]] = 0;
                   newEnemyCount--;
               }
-*/
 
               bool isTask =  (path.size() + newEnemyCount < bestSteps && (boundary-1) > 0);
               if(isTask){
                   if(k <= 2){
                       k++;
-                      #pragma omp task shared(chosenNode, bestPath, bestSteps) firstprivate(path, newEnemyCount, boundary,  newQueen, visited)
+                      #pragma omp task shared(chosenNode, bestPath, bestSteps) firstprivate(path, newEnemyCount, boundary, newBoard, newQueen, visited)
                       {
-                        int**  newBoard = copyArr(board, size);
-                          if (board[newQueen[0]][newQueen[1]] == 1) { // check if has black piece
-                              newBoard[newQueen[0]][newQueen[1]] = 0;
-                              newEnemyCount--;
-                          }
                         goDeeper(newBoard, size, newQueen, boundary - 1, newEnemyCount, visited); // recursion
-                        deleteArr(newBoard, size);
                       }
-                    //  #pragma omp taskwait
+                      #pragma omp taskwait
                   } else {
-                    if (board[newQueen[0]][newQueen[1]] == 1) { // check if has black piece
-                        board[newQueen[0]][newQueen[1]] = 0;
-                        newEnemyCount--;
-                    }
-                    goDeeper(board, size, newQueen, boundary - 1, newEnemyCount, visited); // recursion
+                    goDeeper(newBoard, size, newQueen, boundary - 1, newEnemyCount, visited); // recursion
                   }
               }
 
               delete[] newQueen;
-
+              deleteArr(newBoard, size);
               path.pop_back(); // delete from path
-              board[newQueen[0]][newQueen[1]] = 1;
+
               visited[steps[chosenNode][0]][steps[chosenNode][1]] = false;
           }
           chosenNode++;
