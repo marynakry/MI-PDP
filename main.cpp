@@ -4,8 +4,13 @@
 #include <omp.h>
 #include <unistd.h>
 #include <time.h>
+#include <chrono>
+#include <atomic>
 
 using namespace std;
+using namespace chrono;
+
+atomic<int> k;
 
 struct Point {
     Point(int x, int y): x(x), y(y) {}
@@ -206,8 +211,23 @@ void checkBoard(int **board, vector<Point> path){
     cout << endl;
 }
 
-void goDeeper(int **board, int size, int *queen, int boundary, int enemyCount, bool **visited) { //recursion function
+int **copyArr(int **arr, int size){
 
+  int **newArr = new int *[size];
+  for (int i = 0; i < size; i++) {
+      newArr[i] = new int [size]();
+  }
+
+  for (int i = 0; i < size; ++i) {
+      for (int j = 0; j < size; ++j) {
+          newArr[i][j] = arr[i][j];
+      }
+  }
+  return newArr;
+}
+
+void goDeeper(int **board, int size, int *queen, int boundary, int enemyCount, bool **visited) { //recursion function
+    k--;
     if (!enemyCount && path.size() < bestSteps) {  //if found a better solution
 
         #pragma omp critical
@@ -236,41 +256,45 @@ void goDeeper(int **board, int size, int *queen, int boundary, int enemyCount, b
               int newEnemyCount = enemyCount;
 
               // make new board
-              int **newBoard = new int *[size];
-              for (int i = 0; i < size; i++) {
-                  newBoard[i] = new int [size]();
-              }
+              //newBoard = copyArr(board, size);
 
-              for (int i = 0; i < size; ++i) {
-                  for (int j = 0; j < size; ++j) {
-                      newBoard[i][j] = board[i][j];
-                  }
-              }
-
-              if (board[newQueen[0]][newQueen[1]] == 1) { // check if has black piece
+            /*  if (board[newQueen[0]][newQueen[1]] == 1) { // check if has black piece
                   newBoard[newQueen[0]][newQueen[1]] = 0;
                   newEnemyCount--;
               }
+*/
 
               bool isTask =  (path.size() + newEnemyCount < bestSteps && (boundary-1) > 0);
               if(isTask){
-                #pragma omp task if(bestSteps < (boundary+bestSteps)/2) shared(chosenNode, bestPath, bestSteps) firstprivate(path, newEnemyCount, boundary, newBoard, newQueen, visited)
-                {
-                  goDeeper(newBoard, size, newQueen, boundary - 1, newEnemyCount, visited); // recursion
-                }
-
-                #pragma omp taskwait
-  }
+                  if(k <= 2){
+                      k++;
+                      #pragma omp task shared(chosenNode, bestPath, bestSteps) firstprivate(path, newEnemyCount, boundary,  newQueen, visited)
+                      {
+                        int**  newBoard = copyArr(board, size);
+                          if (board[newQueen[0]][newQueen[1]] == 1) { // check if has black piece
+                              newBoard[newQueen[0]][newQueen[1]] = 0;
+                              newEnemyCount--;
+                          }
+                        goDeeper(newBoard, size, newQueen, boundary - 1, newEnemyCount, visited); // recursion
+                        deleteArr(newBoard, size);
+                      }
+                    //  #pragma omp taskwait
+                  } else {
+                    if (board[newQueen[0]][newQueen[1]] == 1) { // check if has black piece
+                        board[newQueen[0]][newQueen[1]] = 0;
+                        newEnemyCount--;
+                    }
+                    goDeeper(board, size, newQueen, boundary - 1, newEnemyCount, visited); // recursion
+                  }
+              }
 
               delete[] newQueen;
-              deleteArr(newBoard, size);
+
               path.pop_back(); // delete from path
+              board[newQueen[0]][newQueen[1]] = 1;
               visited[steps[chosenNode][0]][steps[chosenNode][1]] = false;
           }
           chosenNode++;
-
-
-
     }
 
     for (int i = 0; i < stepsCount; i++) {
@@ -289,7 +313,8 @@ int solve(int **board, int size, int *queen, int boundary, int enemyCount) {
     }
     visited[queen[0]][queen[1]] = true;
 
-    #pragma omp parallel shared(bestPath, bestSteps) firstprivate(board, size, queen, boundary, enemyCount, visited)
+
+    #pragma omp parallel shared(bestPath, bestSteps, size) firstprivate(board, queen, boundary, enemyCount, visited)
     {
         #pragma omp single
         {
@@ -324,7 +349,7 @@ int findQueenMoves (const char * filename) {
 }
 
 int main(int argc, char* argv[]){
-    if (argc != 3) {
+  if (argc != 3) {
     cout << "Usage: " << argv[0] << " <thread_count> <test_file>" << endl;
     return 1;
   }
@@ -332,14 +357,14 @@ int main(int argc, char* argv[]){
   int thread_count = atoi(argv[1]);
   cout << "Threads " << thread_count << endl;
   omp_set_num_threads(thread_count);
-  
+
   auto start = std::chrono::high_resolution_clock::now();
 
 
   cout << findQueenMoves(argv[2]) << endl;
 
-auto stop = std::chrono::high_resolution_clock::now();
+  auto stop = std::chrono::high_resolution_clock::now();
 
   cout << "Time " << std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count()/1000. << '\n';
-     return 0;
+    return 0;
 }
